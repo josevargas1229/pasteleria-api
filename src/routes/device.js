@@ -55,7 +55,6 @@ deviceRouter.get('/:id', async (req, res) => {
 })
 
 
-
 //crear un nuevo dispositivo (administrador)
 deviceRouter.post('', async (req, res) => {
     try {
