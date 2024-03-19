@@ -17,7 +17,7 @@ dotenv.config();
 const app = express()
 app.use(json())
 app.disable('x-powered-by')
-app.use(express.static(path.join(__dirname, 'src', 'assets')));
+//app.use(express.static(path.join(__dirname, 'src', 'assets')));
 app.use(cookieParser())
 const ACCEPTEP_ORIGINS = [
     'http://localhost:3000',
