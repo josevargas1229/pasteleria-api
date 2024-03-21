@@ -191,11 +191,12 @@ deviceRouter.post('/actualizarVariable/:id',async(req,res)=>{
     try {
         const {id}=req.params;
         const {variable,valor}=req.body;
+        const variableMin= variable.toLowerCase();
         const dispositivo = await Dispositivo.findById(id);
         if (!dispositivo) {
             return res.status(404).json({ error: 'Dispositivo no encontrado' });
         }
-        dispositivo[variable]=valor;
+        dispositivo[variableMin]=valor;
         await dispositivo.save();
         const historico=new Historico({idDevice:dispositivo._id,variable:variable,valor:valor,fecha:new Date()})
         await historico.save();
