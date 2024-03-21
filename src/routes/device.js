@@ -182,9 +182,28 @@ deviceRouter.post('/actualizarDatos', async (req, res) => {
 
         return res.json(updatedData);
     } catch (error) {
-        return res.status(500).json({ error: 'Error en el servidor' });
+        return res.status(500).json({ error: error.message });
     }
 });
+
+//Ruta para cambiar el valor de una variable desde el front (usuario normal)
+deviceRouter.post('/actualizarVariable/:id',async(req,res)=>{
+    try {
+        const {id}=req.params;
+        const {variable,valor}=req.body;
+        const dispositivo = await Dispositivo.findById(id);
+        if (!dispositivo) {
+            return res.status(404).json({ error: 'Dispositivo no encontrado' });
+        }
+        dispositivo[variable]=valor;
+        await dispositivo.save();
+        const historico=new Historico({idDevice:dispositivo._id,variable:variable,valor:valor,fecha:new Date()})
+        await historico.save();
+        res.status(200).json({message:'Valor actualizado correctamente'})
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+})
 
 //cambiar la etiqueta de un dispositivo (usuario normal)
 deviceRouter.post('/:id/label', async (req, res) => {
