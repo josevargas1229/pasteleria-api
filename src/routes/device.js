@@ -54,7 +54,6 @@ deviceRouter.get('/:id', async (req, res) => {
     }
 })
 
-
 //crear un nuevo dispositivo (administrador)
 deviceRouter.post('', async (req, res) => {
     try {
@@ -179,7 +178,6 @@ deviceRouter.post('/actualizarDatos', async (req, res) => {
         // Retorna los datos actualizados
         const updatedData = await Dispositivo.findOne({ _id: device_label }, { humedadRelativa: 1, temperatura: 1, humedadSuelo: 1, luminosidad: 1, bomba: 1, luces: 1, turbinas: 1, _id: 0 });
 
-
         return res.json(updatedData);
     } catch (error) {
         return res.status(500).json({ error: error.message });
@@ -239,7 +237,6 @@ deviceRouter.post('/:id/variable',async(req,res)=>{
     }
 })
 
-
 //eliminar un dispositivo
 deviceRouter.delete('/:id', async (req, res) => {
     try {
@@ -259,6 +256,3 @@ deviceRouter.delete('/:id', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 })
-
-
-

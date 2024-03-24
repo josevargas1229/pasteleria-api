@@ -8,7 +8,8 @@ export const productsSchema = mongoose.model(
     precio: { type: Number, required: true },
     stock: { type: Number },
     tipo: { type: String, required: true },
-    imagen: { type: String }
+    imagen: { type: String },
+    sabor:{type: String}
   })
 );
 

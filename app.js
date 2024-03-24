@@ -8,21 +8,24 @@ import { verificarToken, verificarTokenAdmin, verificarTokenUsuario } from './sr
 import { userRouter } from './src/routes/user.js';
 import { recuperacionRouter } from './src/routes/recuperacion.js';
 import { imagesRouter } from './src/routes/images.js';
-import path from 'path';
 import { productRouter } from './src/routes/products.js';
 import cookieParser from 'cookie-parser';
 import { deviceRouter } from './src/routes/device.js';
-export const __dirname = import.meta.dirname;
+import { crudProductsRouter } from './src/routes/rutaCrudProducts.js';
+import { crudPoliticasRouter } from './src/routes/rutaCrudPoliticas.js';
+import { politicasRouter } from './src/routes/verPoliticas.js';
+
 dotenv.config();
 const app = express()
 app.use(json())
 app.disable('x-powered-by')
-// app.use(express.static(path.join(__dirname, 'src', 'assets')));
 app.use(cookieParser())
 const ACCEPTEP_ORIGINS = [
     'http://localhost:3000',
     'http://localhost:4200'
 ]
+
+
 
 const corsOptions = {
     origin: function (origin, callback) {
@@ -32,8 +35,8 @@ const corsOptions = {
             callback(new Error('Not allowed by CORS'));
         }
     },
-    methods: ['GET', 'POST', 'PUT', 'DELETE'], 
-    credentials:true
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true
 };
 app.use(cors(corsOptions));
 
@@ -52,6 +55,9 @@ app.use('/admin', verificarTokenAdmin)
 app.use('/recovery', verificarToken, recuperacionRouter)
 app.use('/images', imagesRouter)
 app.use('/devices', deviceRouter)
+app.use('/crudProducts', crudProductsRouter)
+app.use('/politicas', crudPoliticasRouter)
+app.use('/verPoliticas1', politicasRouter)
 // Middleware de manejo de errores
 app.use((err, req, res, next) => {
     console.error(err.stack);
