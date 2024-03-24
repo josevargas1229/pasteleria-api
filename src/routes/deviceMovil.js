@@ -5,6 +5,20 @@ import * as mongoose from "mongoose";
 import { usersSchema } from "../models/users.js";
 export const deviceMRouter = Router()
 
+//obtener los dispositivos de un usuario (usuario normal)
+deviceMRouter.get('/user', async (req, res) => {
+    console.log(req.userData)
+    try {
+        const { userId:id } = req.userData;
+        const usuario = await usersSchema.findById(id).populate('dispositivos.idDispositivo');
+        if (!usuario) {
+            return res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+        res.json(usuario.dispositivos)
+    } catch (error) {
+        res.status(500).json({ error: error.message })
+    }
+})
 
 //Obtener un dispositivo por id (usuario normal)
 deviceMRouter.get('/:id', async (req, res) => {
@@ -38,20 +52,7 @@ deviceMRouter.get('/:id', async (req, res) => {
 })
 
 
-//obtener los dispositivos de un usuario (usuario normal)
-deviceMRouter.get('/user', async (req, res) => {
-    console.log(req.userData)
-    try {
-        const { userId:id } = req.userData;
-        const usuario = await usersSchema.findById(id).populate('dispositivos.idDispositivo');
-        if (!usuario) {
-            return res.status(404).json({ error: 'Usuario no encontrado' });
-        }
-        res.json(usuario.dispositivos)
-    } catch (error) {
-        res.status(500).json({ error: error.message })
-    }
-})
+
 
 //Ruta para cambiar el valor de una variable desde el front (usuario normal)
 deviceMRouter.post('/actualizarVariable/:id',async(req,res)=>{
