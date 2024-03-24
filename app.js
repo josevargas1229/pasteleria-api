@@ -14,6 +14,7 @@ import { deviceRouter } from './src/routes/device.js';
 import { crudProductsRouter } from './src/routes/rutaCrudProducts.js';
 import { crudPoliticasRouter } from './src/routes/rutaCrudPoliticas.js';
 import { politicasRouter } from './src/routes/verPoliticas.js';
+import { deviceMRouter } from './src/routes/deviceMovil.js';
 
 dotenv.config();
 const app = express()
@@ -55,6 +56,7 @@ app.use('/admin', verificarTokenAdmin)
 app.use('/recovery', verificarToken, recuperacionRouter)
 app.use('/images', imagesRouter)
 app.use('/devices', deviceRouter)
+app.use('/devicesMovil', verificarTokenUsuario, deviceMRouter)
 app.use('/crudProducts', crudProductsRouter)
 app.use('/politicas', crudPoliticasRouter)
 app.use('/verPoliticas1', politicasRouter)
