@@ -9,6 +9,7 @@ productRouter.get('', async(req, res) => {
     try {
         const tipo = req.query.tipo;
         const sabor = req.query.sabor;
+        const busqueda = req.query.q;
     
         let query = {};
         if (tipo) {
@@ -17,7 +18,12 @@ productRouter.get('', async(req, res) => {
         if (tipo !== 'complemento' && sabor) {
             query.sabor = sabor;
         }
-        
+        if (busqueda) {
+            query.$or = [
+                { nombre: { $regex: busqueda, $options: 'i' } }, // Búsqueda por nombre
+                { descripcion: { $regex: busqueda, $options: 'i' } } // Búsqueda por descripción
+            ];
+        }
         const productos = await productsSchema.find(query);
         if (productos.length === 0) {
             return res.status(404).json({ message: 'No se encontraron productos que coincidan con la búsqueda.' });
