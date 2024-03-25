@@ -7,7 +7,6 @@ export const deviceMRouter = Router()
 
 //obtener los dispositivos de un usuario (usuario normal)
 deviceMRouter.get('/user', async (req, res) => {
-    console.log(req.userData)
     try {
         const { userId:id } = req.userData;
         const usuario = await usersSchema.findById(id).populate('dispositivos.idDispositivo');

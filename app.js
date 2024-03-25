@@ -15,6 +15,8 @@ import { crudProductsRouter } from './src/routes/rutaCrudProducts.js';
 import { crudPoliticasRouter } from './src/routes/rutaCrudPoliticas.js';
 import { politicasRouter } from './src/routes/verPoliticas.js';
 import { deviceMRouter } from './src/routes/deviceMovil.js';
+import { crudPreguntasRouter } from './src/routes/rutaCrudPreguntas.js';
+import { preguntasRouter } from './src/routes/verPreguntas.js';
 
 dotenv.config();
 const app = express()
@@ -60,6 +62,8 @@ app.use('/devicesMovil', verificarTokenUsuario, deviceMRouter)
 app.use('/crudProducts', crudProductsRouter)
 app.use('/politicas', crudPoliticasRouter)
 app.use('/verPoliticas1', politicasRouter)
+app.use('/pregun', crudPreguntasRouter)
+app.use('/permite', preguntasRouter)
 // Middleware de manejo de errores
 app.use((err, req, res, next) => {
     console.error(err.stack);
