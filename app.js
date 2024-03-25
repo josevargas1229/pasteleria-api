@@ -26,7 +26,8 @@ app.use(cookieParser())
 const ACCEPTEP_ORIGINS = [
     'http://localhost:3000',
     'http://localhost:4200',
-    'https://lively.uthhtics.com/'
+    'https://lively.uthhtics.com/',
+    'https://uthhtics.com/'
 ]
 
 
