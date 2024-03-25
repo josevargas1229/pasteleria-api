@@ -14,6 +14,10 @@ export const crearProducto = async (req, res) => {
       const { nombre, descripcion, precio, tipo, sabor } = req.body;
       const tipoMin=tipo.toLowerCase();
       // Crear un objeto con los campos requeridos
+      const productoExistente=await productsSchema.find({nombre:nombre})
+      if (productoExistente){
+        res.status(400).json({message:'El producto ya existe'}) 
+      }
       const nuevoProducto = {
           nombre,
           descripcion,
