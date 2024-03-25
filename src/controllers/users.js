@@ -7,7 +7,7 @@ const saltRounds = 10;
 export const crearUsuario = async (req, res) => {
     try {
         console.log(req.body);
-        const { datosCuenta: { password, preguntaRecuperacion: { respuesta: respuestaPregunta }, email}, telefono , ...restUserData } = req.body;
+        const { datosCuenta: { password, preguntaRecuperacion: { respuesta: respuestaPregunta }, email }, telefono, ...restUserData } = req.body;
         const respuestaPreguntaLowercase = respuestaPregunta.toLowerCase();
         const hashedPassword = await bcrypt.hash(password, saltRounds);
         console.log(telefono)
@@ -59,7 +59,7 @@ export const obtenerUsuarios = async (req, res) => {
         const usuarios = await usersSchema.find();
         res.status(200).json(usuarios);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ message: error.message });
     }
 };
 
@@ -68,11 +68,11 @@ export const obtenerUsuarioPorId = async (req, res) => {
     try {
         const usuario = await usersSchema.findById(req.params.id);
         if (!usuario) {
-            return res.status(404).json({ error: 'Usuario no encontrado' });
+            return res.status(404).json({ message: 'Usuario no encontrado' });
         }
         res.status(200).json(usuario);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ message: error.message });
     }
 };
 
@@ -102,12 +102,12 @@ export const actualizarUsuario = async (req, res) => {
         );
 
         if (!usuario) {
-            return res.status(404).json({ error: 'Usuario no encontrado' });
+            return res.status(404).json({ message: 'Usuario no encontrado' });
         }
 
         res.status(200).json(usuario);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ message: error.message });
     }
 };
 
@@ -117,11 +117,11 @@ export const eliminarUsuario = async (req, res) => {
     try {
         const usuario = await usersSchema.findByIdAndDelete(req.params.id);
         if (!usuario) {
-            return res.status(404).json({ error: 'Usuario no encontrado' });
+            return res.status(404).json({ message: 'Usuario no encontrado' });
         }
         res.status(200).json({ message: 'Usuario eliminado correctamente' });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ message: error.message });
     }
 };
 
@@ -134,7 +134,7 @@ export const obtenerUsuarioPorEmail = async (req, res) => {
         const usuario = await usersSchema.findOne({ 'datosCuenta.email': email });
 
         if (!usuario) {
-            return res.status(404).json({ error: 'Usuario no encontrado' });
+            return res.status(404).json({ message: 'Usuario no encontrado' });
         }
 
         const ahora = new Date();
@@ -145,6 +145,37 @@ export const obtenerUsuarioPorEmail = async (req, res) => {
             .cookie('tokenR', tokenR, { path: '/', sameSite: 'none', secure: true, expires: unDiaDespues })
             .json(usuario);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ message: error.message });
+    }
+};
+
+
+export const cambiarContrasena = async (req, res) => {
+    try {
+        
+        const { userId,newPassword } = req.body; // Obtener la nueva contraseña del cuerpo de la solicitud
+
+        // Verificar si se proporcionó una nueva contraseña
+        if (!newPassword) {
+            return res.status(400).json({ message: 'Se requiere una nueva contraseña' });
+        }
+
+        // Hashear la nueva contraseña
+        const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+        // Actualizar la contraseña del usuario en la base de datos
+        const usuarioActualizado = await usersSchema.findByIdAndUpdate(
+            userId,
+            { 'datosCuenta.password': hashedPassword }, // Actualizar el campo de contraseña en los datos de la cuenta
+            { new: true } // Devolver el documento actualizado
+        );
+
+        if (!usuarioActualizado) {
+            return res.status(404).json({ message: 'Usuario no encontrado' });
+        }
+
+        res.status(200).json({ message: 'Contraseña actualizada exitosamente' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 };

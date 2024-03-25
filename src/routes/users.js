@@ -1,6 +1,5 @@
 import { Router } from 'express'
-import { actualizarUsuario, crearUsuario, eliminarUsuario, obtenerUsuarioPorEmail, obtenerUsuarioPorId, obtenerUsuarios } from '../controllers/users.js';
-
+import { cambiarContrasena,actualizarUsuario, crearUsuario, eliminarUsuario, obtenerUsuarioPorEmail, obtenerUsuarioPorId, obtenerUsuarios } from '../controllers/users.js';
 
 export const usersRouter = Router();
 //obtener todos los usuarios
@@ -15,3 +14,5 @@ usersRouter.get('/:id', obtenerUsuarioPorId);
 usersRouter.put('/:id', actualizarUsuario);
 //eliminar un usuario por id
 usersRouter.delete('/:id', eliminarUsuario);
+
+usersRouter.post('/cambiarContrasena', cambiarContrasena);
