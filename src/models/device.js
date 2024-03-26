@@ -9,7 +9,8 @@ const dispositivoSchema = new mongoose.Schema({
     bomba: { type: Number, required: true },
     luces: { type: Number, required: true },
     turbinas: { type: Number, required: true },
-    asignado: { type: Boolean }
+    asignado: { type: Boolean },
+    automatico: { type: Boolean }
 }, { timestamps: true });
 
 const Dispositivo = mongoose.model('Dispositivo', dispositivoSchema);

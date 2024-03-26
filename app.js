@@ -25,7 +25,8 @@ app.disable('x-powered-by')
 app.use(cookieParser())
 const ACCEPTEP_ORIGINS = [
     'https://lively.uthhtics.com',
-    'https://uthhtics.com'
+    'https://uthhtics.com',
+    'http://localhost:3000'
 ]
 
 
