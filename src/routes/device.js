@@ -13,7 +13,7 @@ const password = 'emqx_test'
 // const client = mqtt.connect('mqtts://b7cf3f97.ala.us-east-1.emqxsl.com:8883', {
 //     clientId,
 //   })
-const conectarServerMQTT = () => {
+export const conectarServerMQTT = () => {
     const client = mqtt.connect('mqtt://broker.emqx.io:1883', {
         clientId,
         username,
@@ -22,7 +22,7 @@ const conectarServerMQTT = () => {
     })
     return client
 }
-const crearDispositivoMQTT = (topics, callback) => {
+export const crearDispositivoMQTT = (topics, callback) => {
     const client = conectarServerMQTT()
 
     client.on('connect', () => {
@@ -67,7 +67,7 @@ const crearDispositivoMQTT = (topics, callback) => {
         });
     });
 }
-const publicarMensajeMQTT = (topic, message,callback) => {
+export const publicarMensajeMQTT = (topic, message,callback) => {
     const client = conectarServerMQTT()
     client.on('connect', () => {
         // Publica el mensaje en el tema especificado
@@ -91,7 +91,7 @@ const publicarMensajeMQTT = (topic, message,callback) => {
     });
 }
 // Función para desconectar el cliente MQTT
-const desconectarMQTT = (client) => {
+export const desconectarMQTT = (client) => {
     client.end();
     console.log('Cliente MQTT desconectado');
 };
@@ -322,7 +322,7 @@ deviceRouter.post('/actualizarDatos', async (req, res) => {
     }
 });
 
-//Ruta para cambiar el valor de una variable desde el front (usuario normal)
+//Ruta para cambiar el valor de una variable desde el front desde la aplicacion web (usuario normal)
 deviceRouter.post('/actualizarVariable/:id', async (req, res) => {
     try {
         const { id } = req.params;

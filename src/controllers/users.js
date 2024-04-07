@@ -29,6 +29,7 @@ export const crearUsuario = async (req, res) => {
                 ...req.body.datosCuenta,
                 password: hashedPassword,
                 rol: 'usuario',
+                imagenPerfil:'https://res.cloudinary.com/dy1ejxiua/image/upload/v1711231469/Usuarios/icon-1633249_1280_rf2ucd.png',
                 preguntaRecuperacion: {
                     ...req.body.datosCuenta.preguntaRecuperacion,
                     respuesta: respuestaPreguntaLowercase
