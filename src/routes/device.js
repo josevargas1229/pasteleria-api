@@ -4,6 +4,99 @@ import Dispositivo from "../models/device.js";
 import * as mongoose from "mongoose";
 import { usersSchema } from "../models/users.js";
 export const deviceRouter = Router()
+import mqtt from 'mqtt'
+import { generarCodigo } from "../utilities/codigoOPT.js";
+
+const clientId = 'emqx_nodejs_' + Math.random().toString(16).substring(2, 8)
+const username = 'emqx_test'
+const password = 'emqx_test'
+// const client = mqtt.connect('mqtts://b7cf3f97.ala.us-east-1.emqxsl.com:8883', {
+//     clientId,
+//   })
+const conectarServerMQTT = () => {
+    const client = mqtt.connect('mqtt://broker.emqx.io:1883', {
+        clientId,
+        username,
+        password,
+        // ...other options
+    })
+    return client
+}
+const crearDispositivoMQTT = (topics, callback) => {
+    const client = conectarServerMQTT()
+
+    client.on('connect', () => {
+        console.log('Conexión MQTT establecida');
+
+        // Contador para rastrear la cantidad de tópicos suscritos
+        let topicsSubscribed = 0;
+
+        // Suscribirse a los tópicos necesarios
+        topics.forEach(topic => {
+            client.subscribe(topic, (err) => {
+                if (err) {
+                    console.error('Error al suscribirse al tópico', topic, err);
+                } else {
+                    console.log('Suscripción exitosa al tópico', topic);
+
+                    // Incrementar el contador de tópicos suscritos
+                    topicsSubscribed++;
+
+                    // Si todos los tópicos han sido suscritos
+                    if (topicsSubscribed === topics.length) {
+                        // Publicar un valor inicial (por ejemplo, 0) en cada tópico 
+                        topics.forEach(topic => {
+                            client.publish(topic, '0', (err) => {
+                                if (err) {
+                                    console.error('Error al publicar en el tópico', topic, err);
+                                } else {
+                                    console.log('Valor inicial publicado en el tópico', topic);
+                                }
+                            });
+                        });
+
+                        // Esperar un breve período de tiempo antes de llamar al callback y desconectar el cliente
+                        setTimeout(() => {
+                            if (callback) {
+                                callback(client);
+                            }
+                        }, 1000); // 1000 milisegundos = 1 segundo
+                    }
+                }
+            });
+        });
+    });
+}
+const publicarMensajeMQTT = (topic, message,callback) => {
+    const client = conectarServerMQTT()
+    client.on('connect', () => {
+        // Publica el mensaje en el tema especificado
+        client.publish(topic, message, (err) => {
+            if (err) {
+                console.error('Error al publicar mensaje MQTT:', err);
+            } else {
+                console.log('Mensaje MQTT publicado correctamente:', message);
+            }
+            setTimeout(() => {
+                if (callback) {
+                    callback(client);
+                }
+            }, 1000);
+        });
+    });
+
+    // Manejador de eventos para cuando hay un error en la conexión MQTT
+    client.on('error', (err) => {
+        console.error('Error al conectar al servidor MQTT:', err);
+    });
+}
+// Función para desconectar el cliente MQTT
+const desconectarMQTT = (client) => {
+    client.end();
+    console.log('Cliente MQTT desconectado');
+};
+
+
 
 //Obtener todos los dispositivos (administrador)
 deviceRouter.get('', async (req, res) => {
@@ -57,6 +150,20 @@ deviceRouter.get('/:id', async (req, res) => {
 //crear un nuevo dispositivo (administrador)
 deviceRouter.post('', async (req, res) => {
     try {
+        let clave;
+        let clienteID;
+        let existingClave;
+        let existingClienteID;
+
+        do {
+            clave = generarCodigo();
+            clienteID = 'esp32_' + generarCodigo();
+
+            // Verifica si ya existe un dispositivo con la nueva clave o clienteID
+            existingClave = await Dispositivo.findOne({ clave:clave });
+            existingClienteID = await Dispositivo.findOne({ clienteID:clienteID });
+
+        } while (existingClave || existingClienteID);
         const dispositivo = new Dispositivo
         dispositivo.temperatura = 0
         dispositivo.humedadRelativa = 0
@@ -66,10 +173,24 @@ deviceRouter.post('', async (req, res) => {
         dispositivo.luces = 0
         dispositivo.turbinas = 0
         dispositivo.asignado = false
+        dispositivo.automatico = true
+        dispositivo.clienteID=clienteID
+        dispositivo.clave=clave
         await dispositivo.save();
+        const topics = [
+            `dispositivos/${dispositivo.clienteID}/bomba`,
+            `dispositivos/${dispositivo.clienteID}/automatico`,
+            `dispositivos/${dispositivo.clienteID}/luces`,
+            `dispositivos/${dispositivo.clienteID}/turbinas`
+        ];
+        
+        const client = crearDispositivoMQTT(topics, (client) => {
+            // Desconectar el cliente MQTT después de suscribirse a los tópicos
+            desconectarMQTT(client);
+        });
         res.status(201).json({ message: 'Dispositivo creado con exito' })
     } catch (error) {
-
+        res.status(500).json({ error: error.message });
     }
 })
 
@@ -87,23 +208,40 @@ deviceRouter.post('/user', async (req, res) => {
     }
 })
 
-//asignar un dispositivo a un usuario (administrador)
 deviceRouter.post('/user/:id', async (req, res) => {
     try {
-        const { dispositivoID } = req.body
+        const { dispositivoID } = req.body;
+        console.log(dispositivoID)
+        const dispositivo = await Dispositivo.findOne({clave:dispositivoID});
+        if (!dispositivo) {
+            return res.status(404).json({ error: 'El dispositivo no existe' });
+        }
+        
+        // Buscar el usuario por su ID
         const usuario = await usersSchema.findById(req.params.id);
         if (!usuario) {
             return res.status(404).json({ error: 'Usuario no encontrado' });
         }
-        usuario.dispositivos.push({ idDispositivo: dispositivoID });
+        const idDispositivo=dispositivo._id
+        // Verificar si el dispositivo ya está asignado al usuario
+        const dispositivoExistente = usuario.dispositivos.find(dispositivo => dispositivo.idDispositivo.toString() === idDispositivo);
+        if (dispositivoExistente) {
+            return res.status(400).json({ error: 'El dispositivo ya está asignado al usuario' });
+        }
+
+        // Si el dispositivo no está asignado al usuario, se agrega
+        usuario.dispositivos.push({ idDispositivo: idDispositivo });
         await usuario.save();
-        const dispositivo = await Dispositivo.updateOne({ _id: dispositivoID }, { asignado: true });
+
+        // Marcar el dispositivo como asignado
+        await Dispositivo.updateOne({ _id: idDispositivo }, { asignado: true });
 
         res.json(usuario);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
-})
+});
+
 
 // Ruta para manejar la actualización de datos (de la ESP32)
 deviceRouter.post('/actualizarDatos', async (req, res) => {
@@ -185,20 +323,26 @@ deviceRouter.post('/actualizarDatos', async (req, res) => {
 });
 
 //Ruta para cambiar el valor de una variable desde el front (usuario normal)
-deviceRouter.post('/actualizarVariable/:id',async(req,res)=>{
+deviceRouter.post('/actualizarVariable/:id', async (req, res) => {
     try {
-        const {id}=req.params;
-        const {variable,valor}=req.body;
-        const variableMin= variable.toLowerCase();
-        const dispositivo = await Dispositivo.findById(id);
+        const { id } = req.params;
+        const { variable, valor } = req.body;
+        const variableMin = variable.toLowerCase();
+        const dispositivo = await Dispositivo.findOne({clienteID:id});
         if (!dispositivo) {
             return res.status(404).json({ error: 'Dispositivo no encontrado' });
         }
-        dispositivo[variableMin]=valor;
+        dispositivo[variableMin] = valor;
         await dispositivo.save();
-        const historico=new Historico({idDevice:dispositivo._id,variable:variable,valor:valor,fecha:new Date()})
+        const topic = `dispositivos/${id}/${variableMin}`;
+        const message = valor.toString(); // Convierte el valor a una cadena
+        publicarMensajeMQTT(topic, message, (client) => {
+            // Desconectar el cliente MQTT después de suscribirse a los tópicos
+            desconectarMQTT(client);
+        });
+        const historico = new Historico({ idDevice: dispositivo._id, variable: variable, valor: valor, fecha: new Date() })
         await historico.save();
-        res.status(200).json({message:'Valor actualizado correctamente'})
+        res.status(200).json({ message: 'Valor actualizado correctamente' })
     } catch (error) {
         return res.status(500).json({ error: error.message });
     }
@@ -214,22 +358,22 @@ deviceRouter.post('/:id/label', async (req, res) => {
         if (!dispositivo) {
             return res.status(404).json({ error: 'Dispositivo no encontrado' });
         }
-    
+
         // Actualiza la etiqueta del dispositivo
         dispositivo.label = label;
         await dispositivo.save();
-    
+
         res.status(200).json({ message: 'Etiqueta actualizada correctamente' });
     } catch (error) {
         res.status(500).json({ error: error.message });
-        }
+    }
 });
 
 //traer los valores de una variable (usuario normal)
-deviceRouter.post('/:id/variable',async(req,res)=>{
+deviceRouter.post('/:id/variable', async (req, res) => {
     try {
-        const {variable}=req.body
-        const dataVariable=await Historico.find({variable:variable})
+        const { variable } = req.body
+        const dataVariable = await Historico.find({ variable: variable })
         console.log(dataVariable)
         res.status(200)
     } catch (error) {

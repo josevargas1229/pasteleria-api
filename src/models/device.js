@@ -2,6 +2,8 @@ import mongoose from 'mongoose';
 
 const dispositivoSchema = new mongoose.Schema({
     label:{type:String},
+    clave:{type:String, unique: true},
+    clienteID:{type:String, unique: true},
     temperatura: { type: Number, required: true },
     humedadRelativa: { type: Number, required: true },
     humedadSuelo: { type: Number, required: true },
