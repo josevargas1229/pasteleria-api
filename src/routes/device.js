@@ -250,7 +250,7 @@ deviceRouter.post('/actualizarDatos', async (req, res) => {
         //65ec920163a4ecc05c177e18
         // Verifica la existencia del dispositivo en la base de datos
 
-        const existingDevice = await Dispositivo.findOne({ _id: device_label });
+        const existingDevice = await Dispositivo.findOne({ clienteID: device_label });
         if (!existingDevice) {
             return res.status(404).json({ message: 'La tarjeta no existe' });
         }
