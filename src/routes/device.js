@@ -14,7 +14,7 @@ const password = 'emqx_test'
 //     clientId,
 //   })
 export const conectarServerMQTT = () => {
-    const client = mqtt.connect('mqtt://broker.emqx.io:1883', {
+    const client = mqtt.connect('mqtts://b7cf3f97.ala.us-east-1.emqxsl.com:8883', {
         clientId,
         username,
         password,
